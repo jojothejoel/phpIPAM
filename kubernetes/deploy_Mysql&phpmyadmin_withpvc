@@ -1,4 +1,4 @@
-# Before deploying this part create kubernetes secret to be able to use this deployment file
+# Before deploying this part create kubernetes secret called mysql-secret to be able to use this deployment file
 apiVersion: apps/v1
 kind: Deployment
 metadata:

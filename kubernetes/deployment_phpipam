@@ -1,0 +1,54 @@
+# Before deploying this make sure you have kubernetes secret called mysql-secret
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phpipam-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phpipam
+  template:
+    metadata:
+      labels:
+        app: phpipam
+    spec:
+      containers:
+      - name: phpipam
+        image: jojothejoel/phpipam:0.1
+        ports:
+        - containerPort: 80
+        env:
+        - name: DB_HOST
+          value: "mysql-service" # Use the name of your MySQL service
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: database
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: user
+        - name: DB_PASS
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: password
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: phpipam-service
+spec:
+  selector:
+    app: phpipam
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer

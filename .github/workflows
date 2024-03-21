@@ -1,0 +1,46 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      # Add steps to install necessary tools (e.g., Terraform, kubectl)
+      
+      - name: Initialize Terraform
+        run: terraform init
+        working-directory: terraform
+
+      - name: Apply Terraform Changes
+        run: terraform apply -auto-approve
+        working-directory: terraform
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+      # Add steps to deploy Kubernetes services and run scripts
+      - name: Deploy MySQL and PhpMyAdmin
+        run: kubectl apply -f kubernetes/deploy_Mysql&phpmyadmin_withpvc.yaml
+        working-directory: .
+
+      - name: Deploy PHPipam
+        run: kubectl apply -f kubernetes/deployment_phpipam.yaml
+        working-directory: .
+
+      - name: Install Prometheus and Grafana
+        run: |
+          chmod +x kubernetes/install_prometheus&grafana.sh
+          ./kubernetes/install_prometheus&grafana.sh
+        working-directory: .
+
+      # Add more deployment steps as needed

@@ -2,10 +2,36 @@ provider "azurerm" {
   features {}
 }
 
+# Define variables
+variable "resource_group_name" {
+  description = "The name of the Azure Resource Group"
+  default     = "phpipam_resources"
+}
+
+variable "location" {
+  description = "The Azure region location"
+  default     = "West Europe"
+}
+
+variable "vm_size" {
+  description = "The size of the Azure Virtual Machine"
+  default     = "Standard_DS1_v2"
+}
+
+variable "admin_username" {
+  description = "The admin username for the Azure Virtual Machine"
+  default     = "jose"
+}
+
+variable "admin_password" {
+  description = "The admin password for the Azure Virtual Machine"
+  default     = "test..123"
+}
+
 # Resource Group
 resource "azurerm_resource_group" "example" {
-  name     = "phpipam_resources"
-  location = "West Europe" # Change the location as needed
+  name     = var.resource_group_name
+  location = var.location
 }
 
 # Virtual Network
@@ -84,9 +110,9 @@ resource "azurerm_linux_virtual_machine" "example" {
   resource_group_name = azurerm_resource_group.example.name
   network_interface_ids = [azurerm_network_interface.example.id]
 
-  size                 = "Standard_DS1_v2"
-  admin_username       = "jose"
-  admin_password       = "test..123"
+  size                 = var.vm_size
+  admin_username       = var.admin_username
+  admin_password       = var.admin_password
 
   os_disk {
     caching              = "ReadWrite"

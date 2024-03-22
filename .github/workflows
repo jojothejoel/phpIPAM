@@ -13,8 +13,42 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      # Add steps to install necessary tools (e.g., Terraform, kubectl)
+      # Install necessary tools
+      - name: Install Terraform
+        run: |
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+          sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+          sudo apt-get update && sudo apt-get install terraform
+
+      - name: Install Azure CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
       
+      - name: Prompt User for Azure Credentials
+        id: prompt-azure-credentials
+        run: |
+          echo "::set-output name=user::$(read -p 'Enter Azure Username: ' && echo $REPLY)"
+          echo "::set-output name=password::$(read -sp 'Enter Azure Password: ' && echo $REPLY)"
+
+      - name: Azure Login
+        run: |
+          az login --username ${{ steps.prompt-azure-credentials.outputs.user }} --password ${{ steps.prompt-azure-credentials.outputs.password }}
+
+      - name: Install kubectl
+        run: |
+          sudo apt-get update && sudo apt-get install -y apt-transport-https gnupg2 curl
+          curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+          echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+          sudo apt-get update && sudo apt-get install -y kubectl
+
+      # Initialize Terraform 
+      - name: Set Azure Environment Variables
+        run: |
+          export ARM_CLIENT_ID=$(az account show --query 'user.name' -o tsv)
+          export ARM_CLIENT_SECRET=$(az account get-access-token --query 'accessToken' -o tsv)
+          export ARM_SUBSCRIPTION_ID=$(az account show --query 'id' -o tsv)
+          export ARM_TENANT_ID=$(az account show --query 'tenantId' -o tsv)
+
       - name: Initialize Terraform
         run: terraform init
         working-directory: terraform
@@ -23,10 +57,35 @@ jobs:
         run: terraform apply -auto-approve
         working-directory: terraform
         env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_CLIENT_ID: ${{ env.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ env.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ env.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ env.ARM_TENANT_ID }}
+
+      # Configure kubectl to access AKS cluster
+      - name: Configure kubectl
+        run: |
+          az aks get-credentials --resource-group $RESOURCE_GROUP --name $CLUSTER_NAME --overwrite-existing
+        env:
+          KUBECONFIG: ${{ github.workspace }}/kubeconfig
+
+      # Prompt the user for MySQL secrets
+      - name: Prompt User for MySQL Secrets
+        id: prompt-mysql-secrets
+        run: |
+          echo "::set-output name=root_password::$(read -p 'Enter MySQL root password: ' && echo $REPLY)"
+          echo "::set-output name=mysql_user::$(read -p 'Enter MySQL user: ' && echo $REPLY)"
+          echo "::set-output name=mysql_password::$(read -p 'Enter MySQL password: ' && echo $REPLY)"
+          echo "::set-output name=mysql_database::$(read -p 'Enter MySQL database: ' && echo $REPLY)"
+
+      # Continue with deployment steps using MySQL secrets provided by the user
+      - name: Create MySQL Secret
+        run: |
+          kubectl create secret generic mysql-secret \
+            --from-literal=root-password="${{ steps.prompt-mysql-secrets.outputs.root_password }}" \
+            --from-literal=user="${{ steps.prompt-mysql-secrets.outputs.mysql_user }}" \
+            --from-literal=password="${{ steps.prompt-mysql-secrets.outputs.mysql_password }}" \
+            --from-literal=database="${{ steps.prompt-mysql-secrets.outputs.mysql_database }}"
 
       # Add steps to deploy Kubernetes services and run scripts
       - name: Deploy MySQL and PhpMyAdmin
@@ -39,8 +98,8 @@ jobs:
 
       - name: Install Prometheus and Grafana
         run: |
-          chmod +x kubernetes/install_prometheus&grafana.sh
-          ./kubernetes/install_prometheus&grafana.sh
+          chmod +x Script/install_prometheus&grafana.sh
+          ./Script/install_prometheus&grafana.sh
         working-directory: .
 
       # Add more deployment steps as needed

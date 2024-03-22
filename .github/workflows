@@ -47,12 +47,17 @@ jobs:
           export ARM_SUBSCRIPTION_ID=$(az account show --query 'id' -o tsv)
           export ARM_TENANT_ID=$(az account show --query 'tenantId' -o tsv)
 
+      - name: Create Terraform Variables File
+        run: |
+          echo "admin_username = \"${{ secrets.ADMIN_USERNAME }}\"" > terraform/variables.tfvars
+          echo "admin_password = \"${{ secrets.ADMIN_PASSWORD }}\"" >> terraform/variables.tfvars
+
       - name: Initialize Terraform
         run: terraform init
         working-directory: terraform
 
       - name: Apply Terraform Changes
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve -var-file=terraform/variables.tfvars
         working-directory: terraform
         env:
           ARM_CLIENT_ID: ${{ env.ARM_CLIENT_ID }}

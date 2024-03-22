@@ -23,7 +23,13 @@ jobs:
       - name: Install Azure CLI
         run: |
           curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-      
+
+      - name: Install Helm
+        run: |
+          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+          chmod +x get_helm.sh
+          ./get_helm.sh
+
       - name: Prompt User for Azure Credentials
         id: prompt-azure-credentials
         run: |
@@ -34,14 +40,6 @@ jobs:
         run: |
           az login --username ${{ steps.prompt-azure-credentials.outputs.user }} --password ${{ steps.prompt-azure-credentials.outputs.password }}
 
-      - name: Install kubectl
-        run: |
-          sudo apt-get update && sudo apt-get install -y apt-transport-https gnupg2 curl
-          curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-          echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
-          sudo apt-get update && sudo apt-get install -y kubectl
-
-      # Initialize Terraform 
       - name: Set Azure Environment Variables
         run: |
           export ARM_CLIENT_ID=$(az account show --query 'user.name' -o tsv)
@@ -62,44 +60,4 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ env.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ env.ARM_TENANT_ID }}
 
-      # Configure kubectl to access AKS cluster
-      - name: Configure kubectl
-        run: |
-          az aks get-credentials --resource-group $RESOURCE_GROUP --name $CLUSTER_NAME --overwrite-existing
-        env:
-          KUBECONFIG: ${{ github.workspace }}/kubeconfig
-
-      # Prompt the user for MySQL secrets
-      - name: Prompt User for MySQL Secrets
-        id: prompt-mysql-secrets
-        run: |
-          echo "::set-output name=root_password::$(read -p 'Enter MySQL root password: ' && echo $REPLY)"
-          echo "::set-output name=mysql_user::$(read -p 'Enter MySQL user: ' && echo $REPLY)"
-          echo "::set-output name=mysql_password::$(read -p 'Enter MySQL password: ' && echo $REPLY)"
-          echo "::set-output name=mysql_database::$(read -p 'Enter MySQL database: ' && echo $REPLY)"
-
-      # Continue with deployment steps using MySQL secrets provided by the user
-      - name: Create MySQL Secret
-        run: |
-          kubectl create secret generic mysql-secret \
-            --from-literal=root-password="${{ steps.prompt-mysql-secrets.outputs.root_password }}" \
-            --from-literal=user="${{ steps.prompt-mysql-secrets.outputs.mysql_user }}" \
-            --from-literal=password="${{ steps.prompt-mysql-secrets.outputs.mysql_password }}" \
-            --from-literal=database="${{ steps.prompt-mysql-secrets.outputs.mysql_database }}"
-
-      # Add steps to deploy Kubernetes services and run scripts
-      - name: Deploy MySQL and PhpMyAdmin
-        run: kubectl apply -f kubernetes/deploy_Mysql&phpmyadmin_withpvc.yaml
-        working-directory: .
-
-      - name: Deploy PHPipam
-        run: kubectl apply -f kubernetes/deployment_phpipam.yaml
-        working-directory: .
-
-      - name: Install Prometheus and Grafana
-        run: |
-          chmod +x Script/install_prometheus&grafana.sh
-          ./Script/install_prometheus&grafana.sh
-        working-directory: .
-
-      # Add more deployment steps as needed
+      # Add more steps for deploying Kubernetes services, running scripts, etc.

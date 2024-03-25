@@ -66,7 +66,7 @@ sudo chmod +x install_prometheus\&grafana.sh
 
 echo "Step 8: Granting permissions to the user, this will take aproximatelly 40 seconds"
 sleep 40s
-kubectl exec -it $(kubectl get pods -l app=mysql -o jsonpath="{.items[0].metadata.name}") -- mysql -u root -p"$root_password" --execute="GRANT ALL PRIVILEGES ON . TO '$user'@'%' WITH GRANT OPTION; FLUSH PRIVILEGES;"
+kubectl exec -it $(kubectl get pods -l app=mysql -o jsonpath="{.items[0].metadata.name}") -- mysql -u root -p"$root_password" --execute="GRANT ALL PRIVILEGES ON *.* TO '$user'@'%' WITH GRANT OPTION; FLUSH PRIVILEGES;"
 
 echo "Deployment completed successfully!"
 

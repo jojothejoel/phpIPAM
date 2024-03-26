@@ -1,7 +1,7 @@
 # phpIPAM deployment #
  
 ## Description of this project ##
-The "PHPipam Webpage with MySQL Database" project is designed to create a web application using PHPipam, an IP address management (IPAM) tool, integrated with a MySQL backend database. This application is deployed on Microsoft Azure, utilizing its cloud services for scalability, reliability, and security. Users can efficiently manage IP addresses, subnets, VLANs, and other network-related resources through a user-friendly web interface, all hosted on Azure infrastructure.
+The "phpIPAM Webpage with MySQL Database" project is designed to create a web application using PHPipam, an IP address management (IPAM) tool, integrated with a MySQL backend database. This application is deployed on Microsoft Azure, utilizing its cloud services for scalability, reliability, and security. Users can efficiently manage IP addresses, subnets, VLANs, and other network-related resources through a user-friendly web interface, all hosted on Azure infrastructure.
 
 ## Installation ##
 ### Prerequisites ###

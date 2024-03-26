@@ -5,8 +5,9 @@ The "PHPipam Webpage with MySQL Database" project is designed to create a web ap
 
 ## Installation ##
 ### Prerequisites ###
-- Clone the repository `phpIPAM` into a local virtual machine.
+- Clone the repository [jojothejoel/phpIPAM](https://github.com/jojothejoel/phpIPAM) into a local virtual machine.
 - Grant execute permissions to the user.
+
 
 ### Steps ###
 1. Step 1: Clone the repository phpIPAM into a local virtual machine

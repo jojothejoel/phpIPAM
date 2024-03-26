@@ -10,11 +10,9 @@ The "PHPipam Webpage with MySQL Database" project is designed to create a web ap
 
 
 ### Steps ###
-1. Step 1: Clone the repository phpIPAM into a local virtual machine
-2. Step 2: Give execute permission to your user
-3. Step 3: Launch the Automationdeployment.sh after  giving user the right permissions permission
-4. Step 4: always follow the instrucitons given
-   After the script has run you can use kubectl commands to see the different ip adresses in your cluster to reach phpmyadmin phpIPAM and also for prometheus and grafana using -n monitoring to access the monitoring namespace 
+1. Step 3: Launch the Automationdeployment.sh after  giving user the right permissions permission
+2. Step 4: always follow the instrucitons given
+3. After the script has run you can use kubectl commands to see the different ip adresses in your cluster to reach phpmyadmin phpIPAM and also for prometheus and grafana using -n monitoring to access the monitoring namespace 
 
 ## Usage ##
 Log in to the phpIPAM web interface to install the phpIPAM using your database credentials and in advanced options check the create database and the other options must be also checked 
